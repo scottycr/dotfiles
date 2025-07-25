@@ -1,24 +1,52 @@
 #!/bin/bash
 
-# for config_dir in */; do 
-#     config_dir=${config_dir%*/}
-#     echo "Grabbing current $config_dir config..."; 
-#     cp --interactive --recursive --verbose "$HOME/.config/$config_dir" . 
-#     echo "Done!"
-# done
-
-# echo "Successfully moved all configuration files over."
-
+# === START GLOBALS ===
 config_dir="$HOME/.config"
 repo_config_dir="."
 all_found_dirs=()
+# === END GLOBALS ===
 
-# Keeps track of the different categories of configuration files
-editor_dirs=("nvim")
+# === START CONFIG CATEGORIES ===
+editor_dirs_file="editor_configs.txt"
+# Checks to see if the editor configs list file exists
+if [ -f "$editor_dirs_file" ]; then
+    # Checks to see if the mapfile command is available
+    if command -v mapfile >/dev/null 2>&1; then
+        mapfile -t editor_dirs < "$editor_dirs_file"
+    else
+        editor_dirs=()
+        while IFS= read -r line; do
+            editor_dirs+=("$line")
+        done < "$editor_dirs_file"
+    fi 
+else
+    echo "Could not find $editor_dirs_file in the current directory!"
+    echo "This script will not be able to find any editor configs."
+fi
 found_editor_dirs=()
-hyprland_dirs=("hypr" "kitty" "waybar")
-found_hyprland_dirs=()
 
+hyprland_dirs_file="hyprland_configs.txt"
+# Checks to see if the Hyprland configs list file exists
+if [ -f "$hyprland_dirs_file" ]; then
+    # Checks to see if the mapfile command is available
+    if command -v mapfile >/dev/null 2>&1; then
+        mapfile -t hyprland_dirs < "$hyprland_dirs_file"
+    else
+        hyprland_dirs=()
+        while IFS= read -r line; do
+            hyprland_dirs+=("$line")
+        done < "$hyprland_dirs_file"
+    fi
+else
+    echo "Could not find $hyprland_dirs_file in the current directory!"
+    echo "This script will not be able to find any Hyperland configs."
+    echo
+fi 
+found_hyprland_dirs=()
+# === END CONFIG CATEGORIES ===
+
+
+# === START CONFIG DIRECTORY CHECKING ===
 for sub1 in "$config_dir"/*/; do
     # Remove trailing slash
     folder="${sub1%/}"
@@ -56,7 +84,10 @@ for dir in "${all_found_dirs[@]}"; do
         fi
     done
 done
+# === END CONFIG DIRECTORY CHECKING ===
 
+
+# === START CONFIG COPYING USER CONFIRMATION
 if [ ${#found_editor_dirs[@]} -eq 0 ]; then 
     echo "No editor configs found!"
 else
@@ -97,7 +128,10 @@ else
     fi
 fi
 echo
+# === END CONFIG COPYING USER CONFIRMATION
 
+
+# === START CONFIG COPYING
 # Enable globbing for file checking
 shopt -s nullglob dotglob
 
@@ -135,5 +169,6 @@ fi
 
 # Clean up to abide by best practices
 shopt -u nullglob dotglob
+# === END CONFIG COPYING
 
 echo "Done grabbing configs!"

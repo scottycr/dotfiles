@@ -2,12 +2,13 @@
 
 # === START GLOBALS ===
 config_dir="$HOME/.config"
-repo_config_dir="."
+repo_config_dir="../configs"
+config_lists_dir="../config_lists"
 all_found_dirs=()
 # === END GLOBALS ===
 
 # === START CONFIG CATEGORIES ===
-editor_dirs_file="editor_configs.txt"
+editor_dirs_file="$config_lists_dir/editor_configs.txt"
 # Checks to see if the editor configs list file exists
 if [ -f "$editor_dirs_file" ]; then
     # Checks to see if the mapfile command is available
@@ -25,7 +26,7 @@ else
 fi
 found_editor_dirs=()
 
-hyprland_dirs_file="hyprland_configs.txt"
+hyprland_dirs_file="$config_lists_dir/hyprland_configs.txt"
 # Checks to see if the Hyprland configs list file exists
 if [ -f "$hyprland_dirs_file" ]; then
     # Checks to see if the mapfile command is available

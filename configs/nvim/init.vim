@@ -11,4 +11,4 @@ set number
 " set cc=80
 filetype plugin indent on
 syntax on
-set cursorline
+" set cursorline

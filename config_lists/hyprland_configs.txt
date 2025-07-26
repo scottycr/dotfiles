@@ -1,3 +1,2 @@
 hypr
-kitty
 waybar

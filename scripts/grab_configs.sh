@@ -1,10 +1,13 @@
 #!/bin/bash
 
+# === START VERSION CHECK ===
 # Checks if bash version is compatible
 if (( BASH_VERSINFO[0] < 4 || ( BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 3 ) )); then
     echo "This script requires Bash 4.3 or newer." >&2
+    echo "Exiting the script!" >&2
     exit 1
 fi
+# === END VERSION CHECK ===
 
 
 # === START GLOBALS ===
@@ -31,9 +34,9 @@ load_config_list() {
     mapfile -t config_list < "$config_list_file"
 }
 
-load_config_dirs() {
+load_found_config_dirs() {
     local -n found_dirs="$1"
-    local -n config_dirs="$2"
+    local -n config_list="$2"
     local -n found_config_dirs="$3"
     found_config_dirs=()
 
@@ -43,7 +46,7 @@ load_config_dirs() {
         # Extract just the folder name
         found_dir="${found_dir##*/}"
 
-        for config_dir in "${config_dirs[@]}"; do
+        for config_dir in "${config_list[@]}"; do
             if [[ "$found_dir" == "$config_dir" ]]; then
                 found_config_dirs+=("$found_dir")
             fi
@@ -56,12 +59,12 @@ copy_config_files() {
     local config_category="$2"
 
     if [ ${#found_config_dirs[@]} -eq 0 ]; then 
-        echo "No editor configs found!"
+        echo "No $config_category configs found!"
     else
-        echo "Found editor config directories: ${found_config_dirs[@]}"
+        echo "Found $config_category config directories: ${found_config_dirs[@]}"
         
         while true; do
-            read -rp "Copy current editor configs over to repository: (y/N) " copy_config
+            read -rp "Copy current $config_category configs over to repository: (y/N) " copy_config
             # Defaults to no if user does not provide any input
             if [ -z "$copy_config" ]; then
                 copy_config="n"
@@ -95,21 +98,37 @@ copy_config_files() {
         fi
     fi
     echo
-
 }
 # === END FUNCTIONS ===
 
 
 # === START CONFIG CATEGORIES ===
-editor_dirs_file="$config_lists_dir/editor_configs.txt"
-load_config_list "$editor_dirs_file" editor_dirs "editor"
+# Grabs the different config categories from the config_lists folder
+config_categories=()
+for file in "$config_lists_dir"/*; do
+    # Extract just the file name
+    category="${file##*/}"
+    # Extract just the category name
+    category="${category%%_*}"
 
-hyprland_dirs_file="$config_lists_dir/hyprland_configs.txt"
-load_config_list "$hyprland_dirs_file" hyprland_dirs "Hyprland"
-# === END CONFIG CATEGORIES ===
+    # Declare the necessary variables 
+    config_categories+=("$category")
+    declare -g "${category}_file"="$file"
+    declare -g "${category}_dirs"
+    declare -g "${category}_found_dirs"
+done
 
-
+# Grabs the various configs from each file in the config_lists folder
+for category in "${config_categories[@]}"; do
+    config_list_file="${category}_file"
+    declare -n config_dirs="${category}_dirs"
+    load_config_list ${!config_list_file} config_dirs $category
+done
+# # === END CONFIG CATEGORIES ===
+ 
+ 
 # === START CONFIG DIRECTORY CHECKING ===
+# Grabs all of the config directories for the current user
 all_found_dirs=()
 for dir in "$local_config_dir"/*/; do
     # Remove trailing slash
@@ -121,16 +140,20 @@ for dir in "$local_config_dir"/*/; do
     fi
 done
 
-# Checks for editor configs in the current config directory
-load_config_dirs all_found_dirs editor_dirs found_editor_dirs
-# Checks for Hyprland configs in the current config directory
-load_config_dirs all_found_dirs hyprland_dirs found_hyprland_dirs
+# Checks for matching configs in the current config directory
+for category in "${config_categories[@]}"; do
+    declare -n config_dirs="${category}_dirs"
+    declare -n config_found_dirs="${category}_found_dirs"
+    load_found_config_dirs all_found_dirs config_dirs config_found_dirs
+done
 # === END CONFIG DIRECTORY CHECKING ===
-
-
+ 
+ 
 # === START CONFIG COPYING
-copy_config_files found_editor_dirs "editor"
-copy_config_files found_hyprland_dirs "Hyprland"
+for category in "${config_categories[@]}"; do
+    declare -n config_found_dirs="${category}_found_dirs"
+    copy_config_files config_found_dirs "$category"
+done
 # === END CONFIG COPYING
-
+ 
 echo "Done grabbing configs!"

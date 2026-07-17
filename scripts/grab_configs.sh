@@ -12,7 +12,7 @@ fi
 
 # === START GLOBALS ===
 local_config_dir="$HOME/.config"
-repo_config_dir="../configs"
+repo_config_dir="../config"
 config_lists_dir="../config_lists"
 # === END GLOBALS ===
 

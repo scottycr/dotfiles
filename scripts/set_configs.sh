@@ -62,7 +62,6 @@ copy_config_files() {
         echo "No $config_category configs found!"
     else
         echo "Found $config_category config directories: ${found_config_dirs[@]}"
-        
         while true; do
             read -rp "Copy repository $config_category configs over to local configs: (y/N) " copy_config
             # Defaults to no if user does not provide any input
@@ -79,14 +78,19 @@ copy_config_files() {
             shopt -s nullglob dotglob
 
             for dir in "${found_config_dirs[@]}"; do
-                echo "Grabbing current $dir config..."; 
+                echo "Grabbing current $dir config...";
                 # Grabbing all files in the current dir
                 files=("$repo_config_dir/$dir"/*)
                 # Checks to see if there are no files in the current dir
                 if [ "${#files[@]}" -eq 0 ]; then
                     echo "$dir is empty. Skipping!"
                 else
-                    cp --interactive --recursive --verbose "$repo_config_dir/$dir" "$local_config_dir/"
+                    if [ ! "$dir" = "nvim" ]; then
+                        cp --interactive --recursive --verbose "$repo_config_dir/$dir/" "$local_config_dir/"
+                    else
+                        # We have to handle Neovim as a special case due to it being a shared config across the system
+                        cp --interactive --recursive --verbose "$repo_config_dir/$dir" "/opt/config/"
+                    fi
                     echo "Done!"
                 fi
             done

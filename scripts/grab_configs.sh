@@ -86,7 +86,12 @@ copy_config_files() {
                 if [ "${#files[@]}" -eq 0 ]; then
                     echo "$dir is empty. Skipping!"
                 else
-                    cp --interactive --recursive --verbose "$local_config_dir/$dir" "$repo_config_dir/"
+                    if [ ! "$dir" = "nvim" ]; then
+                        cp --interactive --recursive --verbose "$local_config_dir/$dir" "$repo_config_dir/"
+                    else
+                        # We have to handle Neovim as a special case due to it being a shared config across the system
+                        cp --interactive --recursive --verbose "/opt/config/nvim/" "$repo_config_dir/"
+                    fi
                     echo "Done!"
                 fi
             done

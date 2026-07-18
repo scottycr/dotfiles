@@ -49,7 +49,7 @@ vim.opt.swapfile = false -- Don't create swap files
 vim.opt.undofile = true -- Persistent undo
 vim.opt.updatetime = 300 -- Faster completion
 vim.opt.timeoutlen = 500 -- Key timeout duration
-vim.opt.ttimeoutlen = 10 -- Key code timeout
+vim.opt.ttimeoutlen = 100 -- Key code timeout
 vim.opt.autoread = true -- Auto reload files changed outside vim
 vim.opt.autowrite = false -- Don't auto save
 

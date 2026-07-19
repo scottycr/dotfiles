@@ -14,10 +14,6 @@ vim.opt.scrolloff = 10 -- Keep 10 lines above/below cursor
 vim.opt.sidescrolloff = 8 -- Keep 8 columns left/right of cursor
 
 -- Indentation
-vim.opt.tabstop = 4 -- Tab width
-vim.opt.shiftwidth = 4 -- Indent width
-vim.opt.softtabstop = 4 -- Soft tab stop
-vim.opt.expandtab = true -- Use spaces instead of tabs
 vim.opt.autoindent = true -- Copy indent from current line
 
 -- Search settings
@@ -142,6 +138,72 @@ vim.keymap.set("n", "<leader>bw", ":write<CR>", { desc = "Write to current buffe
 vim.keymap.set("n", "<leader>bq", ":quit<CR>", { desc = "Quit Neovim" })
 vim.keymap.set("n", "<leader>ce", ":edit $MYVIMRC<CR>", { desc = "Edit config" })
 vim.keymap.set("n", "<leader>cr", ":source $MYVIMRC<CR>", { desc = "Reload config" })
+
+local state_file = vim.fn.stdpath("data") .. "/indent_state"
+
+local custom_indent = {
+	tabstop = 4,
+	shiftwidth = 4,
+	softtabstop = 4,
+	expandtab = true,
+}
+
+local vim_indent = {
+	tabstop = 8,
+	shiftwidth = 8,
+	softtabstop = 0,
+	expandtab = false,
+}
+
+local function apply_indent(opts)
+	for k, v in pairs(opts) do
+		vim.opt[k] = v
+	end
+end
+
+local function save_state(state)
+	local f = io.open(state_file, "w")
+	if f then
+		f:write(state)
+		f:close()
+	end
+end
+
+local function load_state()
+	local f = io.open(state_file, "r")
+	if not f then
+		return "custom"
+	end
+
+	local state = f:read("*a")
+	f:close()
+	return state
+end
+
+local function toggle_indent()
+	local current = load_state()
+
+	if current == "custom" then
+		apply_indent(vim_indent)
+		save_state("vim")
+		vim.notify("Using Vim defaults")
+	else
+		apply_indent(custom_indent)
+		save_state("custom")
+		vim.notify("Using custom indentation")
+	end
+end
+
+-- Apply saved preference on startup
+if load_state() == "custom" then
+	apply_indent(custom_indent)
+else
+	apply_indent(vim_indent)
+end
+
+vim.keymap.set("n", "<leader>ti", toggle_indent, {
+	desc = "Toggle indentation style",
+})
 
 -----------------
 -- Status line --
